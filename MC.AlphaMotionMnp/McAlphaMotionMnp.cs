@@ -8,6 +8,24 @@ using EasyLogger;
 
 namespace MC.AlphaMotionMnp
 {
+    public class AxisRuntime {
+        string axisName;
+        double commandPos;
+        double feedbackPos;
+        double speed;
+
+        public AxisRuntime(int index) {
+            axisName = "Axis" + index.ToString();
+            commandPos = 0;
+            feedbackPos = 0;
+            speed = 0;
+        }
+        public string AxisName { get; set; }
+        public double CommandPos { get; set; }
+        public double FeedbackPos { get; set; }
+        public double Speed { get; set; }
+
+    };
     public class McAlphaMotionMnp : McBase
     {
         public McAlphaMotionMnp() {
@@ -22,10 +40,6 @@ namespace MC.AlphaMotionMnp
             _timerDICheck.Elapsed += OnTimerDIElapsed;
 
         }
-
-        //~McAlphaMotionMnp() {
-        //    CloseDevice();
-        //}
 
         public CyclicStates CyclicState { get; private set; }
 
@@ -125,6 +139,9 @@ namespace MC.AlphaMotionMnp
         public List<bool> DigitalInputs { get; } =
             Enumerable.Range(0, 16).Select(i => new bool()).ToList();
 
+        public List<AxisRuntime> Axes { get; } =
+            Enumerable.Range(0, 8).Select(i => new AxisRuntime(i)).ToList();
+
         private int Initialize() {
             int rc = 0;
             return rc;
@@ -139,7 +156,7 @@ namespace MC.AlphaMotionMnp
         private void OnTimerStatusElapsed(object sender, ElapsedEventArgs e) {
             try {
                 _timerStatusCheck.Stop();
-                //ScanTime = DateTime.Now - _lastScanTime;
+
                 RefreshValues();
                 OnValuesRefreshed();
             }
@@ -147,7 +164,6 @@ namespace MC.AlphaMotionMnp
                 if (_isOpen)
                     _timerStatusCheck.Start();
             }
-            //_lastScanTime = DateTime.Now;
         }
 
         private void OnTimerDIElapsed(object sender, ElapsedEventArgs e) {
@@ -155,7 +171,8 @@ namespace MC.AlphaMotionMnp
                 _timerDICheck.Stop();
                 bool isModified = false;
                 lock (_locker) {
-                    isModified = UpdateDigitalInputs();
+                    isModified |= UpdateDigitalInputs();
+                    isModified |= UpdateAxisMonitor();
                 }
                 if (isModified) {
                     OnValuesRefreshed();
@@ -165,7 +182,6 @@ namespace MC.AlphaMotionMnp
                 if (_isOpen)
                     _timerDICheck.Start();
             }
-            //_lastScanTime = DateTime.Now;
         }
 
         private void OnValuesRefreshed() {
@@ -194,7 +210,7 @@ namespace MC.AlphaMotionMnp
             for (int nbit = 0; nbit < _maxDI; nbit++) {
                 int rc = nmiMNApi.nmiDiGetBit(_conNo, _staNo, nbit, ref uiData);
                 //ProcessError(rc, "nmiDiGetBit");
-                
+
                 bool isOn = uiData == 1;
                 if (rc == nmiMNApiDefs.TMC_RV_OK && DigitalInputs[nbit] != isOn)
                     isModified = true;
@@ -204,6 +220,33 @@ namespace MC.AlphaMotionMnp
             return isModified;
         }
 
+        private bool UpdateAxisMonitor() {
+            bool isModified = false;
+
+            int rc = 0;
+            double dbbuffer = 0;
+
+            for (int axis = 0; axis < 8; axis++) {
+                rc = nmiMNApi.nmiAxGetCmdPos(_conNo, axis, ref dbbuffer);
+                if (rc == nmiMNApiDefs.TMC_RV_OK && Axes[axis].CommandPos != dbbuffer) {
+                    isModified |= true;
+                    Axes[axis].CommandPos = dbbuffer;
+                }
+
+                rc = nmiMNApi.nmiAxGetActPos(_conNo, axis, ref dbbuffer);
+                if (rc == nmiMNApiDefs.TMC_RV_OK && Axes[axis].FeedbackPos != dbbuffer) {
+                    isModified |= true;
+                    Axes[axis].FeedbackPos = dbbuffer;
+                }
+
+                rc = nmiMNApi.nmiAxGetCmdVel(_conNo, axis, ref dbbuffer);
+                if (rc == nmiMNApiDefs.TMC_RV_OK && Axes[axis].Speed != dbbuffer) {
+                    isModified |= true;
+                    Axes[axis].Speed = dbbuffer;
+                }
+            }
+            return isModified;
+        }
 
         private int ProcessError(int errorCode, string funcName)
         {
@@ -211,10 +254,10 @@ namespace MC.AlphaMotionMnp
                 bool isError = true;
                 switch (errorCode) {
                 // Do not treat as error the following codes:
-                case nmiMNApiDefs.TMC_RV_STOP_P_S_END_ERR: // -200 //(SLMT+) 방향 소프트웨어 리미트에 의한 정지
-                case nmiMNApiDefs.TMC_RV_STOP_N_S_END_ERR: // -201 //(SLMT-) 방향 소프트웨어 리미트에 의한 정지
-                case nmiMNApiDefs.TMC_RV_STOP_P_H_END_ERR: // -205 //(LMT+) 방향 하드웨어 리미트에 의한 정지
-                case nmiMNApiDefs.TMC_RV_STOP_N_H_END_ERR: // -206 //(LMT-) 방향 하드웨어 리미트에 의한 정지
+                case nmiMNApiDefs.TMC_RV_STOP_P_S_END_ERR: // -200 //(SLMT+)
+                case nmiMNApiDefs.TMC_RV_STOP_N_S_END_ERR: // -201 //(SLMT-)
+                case nmiMNApiDefs.TMC_RV_STOP_P_H_END_ERR: // -205 //(LMT+)
+                case nmiMNApiDefs.TMC_RV_STOP_N_H_END_ERR: // -206 //(LMT-)
                     isError = false;
                     break;
                 }
