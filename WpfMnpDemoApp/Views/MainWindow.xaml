@@ -5,9 +5,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:WpfMnpDemoApp.ViewModels"
+        xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:WpfMnpDemoApp"
         mc:Ignorable="d"
         Title="MainWindow" Height="250" Width="400">
+    <Behaviors:Interaction.Triggers>
+        <Behaviors:EventTrigger EventName="Loaded">
+            <Behaviors:InvokeCommandAction Command="{Binding WindowLoadedCommand}" />
+        </Behaviors:EventTrigger>
+        <Behaviors:EventTrigger EventName="Closing">
+            <Behaviors:InvokeCommandAction Command="{Binding WindowClosingCommand}" />
+        </Behaviors:EventTrigger>
+    </Behaviors:Interaction.Triggers>
     <Window.Resources>
         <Converters:BooleanToBrushConverter x:Key="BooleanToBrushConverter" />
     </Window.Resources>

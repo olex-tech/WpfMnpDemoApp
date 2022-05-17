@@ -11,6 +11,8 @@ namespace WpfMnpDemoApp.ViewModels
         public MainWindowViewModel() {
             _mc = new McAlphaMotionMnp();
 
+            WindowLoadedCommand = new DelegateCommand(WindowLoaded);
+            WindowClosingCommand = new DelegateCommand(WindowClosing);
             CycleBeginCommand = new DelegateCommand(CycleBegin);
             CycleEndCommand = new DelegateCommand(CycleEnd);
 
@@ -32,6 +34,8 @@ namespace WpfMnpDemoApp.ViewModels
 
         //public ICommand SysComBeginCommand { get; private set; }
         //public ICommand SysComResetCommand { get; private set; }
+        public ICommand WindowLoadedCommand { get; private set; }
+        public ICommand WindowClosingCommand { get; private set; }
         public ICommand CycleBeginCommand { get; private set; }
         public ICommand CycleEndCommand { get; private set; }
 
@@ -43,6 +47,12 @@ namespace WpfMnpDemoApp.ViewModels
             CyclicStateOn = CyclicState == CyclicStates.Running;
         }
 
+        private void WindowLoaded() {
+            _mc.OpenDevice();
+        }
+        private void WindowClosing() {
+            _mc.CloseDevice();
+        }
         private void CycleBegin() {
             _mc.Start();
         }

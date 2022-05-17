@@ -13,15 +13,19 @@ namespace MC.AlphaMotionMnp
         public McAlphaMotionMnp() {
             Logger = Log.Get<McAlphaMotionMnp>();
 
-            _timer = new System.Timers.Timer();
-            _timer.Interval = 100;
-            _timer.Elapsed += OnTimerElapsed;
+            _timerStatusCheck = new System.Timers.Timer();
+            _timerStatusCheck.Interval = 1000;
+            _timerStatusCheck.Elapsed += OnTimerElapsed;
         }
+
+        //~McAlphaMotionMnp() {
+        //    CloseDevice();
+        //}
 
         public CyclicStates CyclicState { get; private set; }
 
         public override int OpenDevice() {
-            if (_isConnected) {
+            if (_isOpen) {
                 Logger.Trace("Already load device");
             }
 
@@ -29,39 +33,40 @@ namespace MC.AlphaMotionMnp
             int rc = nmiMNApi.nmiSysLoad(nmiMNApiDefs.emAUTO, ref _boardNum);
             ProcessError(rc, "nmiSysLoad");
 
-            _isConnected = rc == nmiMNApiDefs.TMC_RV_OK;
+            _isOpen = rc == nmiMNApiDefs.TMC_RV_OK;
+            if (_isOpen) {
+                Logger.Debug("Start STATUS_CHECK timer. Interval: " + _timerStatusCheck.Interval.ToString() + "ms");
+                _timerStatusCheck.Start();
+            }
 
             return rc;
         }
         public override int CloseDevice() {
-            Logger.Trace("nmiSysUnLoad");
-            int rc = nmiMNApi.nmiSysUnload();
-            if (rc < 1) {
-                Logger.Debug("nmiMNApi.nmiSysUnload failed");
+            int rc = 1;
+            if (_isOpen) {
+                Logger.Trace("nmiSysUnLoad");
+                rc = nmiMNApi.nmiSysUnload();
+                if (rc != nmiMNApiDefs.TMC_RV_OK) {
+                    Logger.Debug("nmiMNApi.nmiSysUnload failed");
+                }
             }
-
-            _isConnected = false;
+            _isOpen = false;
 
             return rc;
         }
 
         public override int Start() {
-            int rc = OpenDevice();
-            if (rc < 0)
-                return rc;
-
-
             Logger.Trace("nmiSysComm");
-            rc = nmiMNApi.nmiSysComm(_conNo);
+            int rc = nmiMNApi.nmiSysComm(_conNo);
             ProcessError(rc, "nmiSysComm");
 
-            if (rc == 1) {
+            if (rc == nmiMNApiDefs.TMC_RV_OK) {
                 Logger.Trace("nmiCyclicBegin");
                 rc = nmiMNApi.nmiCyclicBegin(_conNo);
                 ProcessError(rc, "nmiCyclicBegin");
             }
 
-            if (rc == 1) {
+            if (rc == nmiMNApiDefs.TMC_RV_OK) {
                 Logger.Trace("nmiConParamLoad");
                 rc = nmiMNApi.nmiConParamLoad();
                 ProcessError(rc, "nmiConParamLoad");
@@ -70,14 +75,10 @@ namespace MC.AlphaMotionMnp
         }
 
         public override int Stop() {
-            int rc = 0;
-            if (_isConnected) {
-                Logger.Trace("nmiCyclicEnd");
-                rc = nmiMNApi.nmiCyclicEnd(_conNo);
-                ProcessError(rc, "nmiCyclicEnd");
-
-                return CloseDevice();
-            }
+            Logger.Trace("nmiCyclicEnd");
+            int rc = nmiMNApi.nmiCyclicEnd(_conNo);
+            ProcessError(rc, "nmiCyclicEnd");
+            CyclicState = CyclicStates.Terminate;
 
             return rc;
         }
@@ -95,14 +96,21 @@ namespace MC.AlphaMotionMnp
         public event EventHandler ValuesRefreshed;
 
         private Log Logger { get; set; }
+        /// <summary>
+        /// Default controller number
+        /// </summary>
         private readonly int _conNo = 0;
+        /// <summary>
+        /// Additional default station number
+        /// </summary>
         private readonly int _staNo = 1;
 
         private int _boardNum = 0;
-        private bool _isConnected = false;
+        private bool _isOpen = false;
 
-        private readonly System.Timers.Timer _timer; 
+        private readonly System.Timers.Timer _timerStatusCheck; 
         private volatile object _locker = new object();
+        private int _lastErrorCode = 0;
 
         private int Initialize() {
             int rc = 0;
@@ -117,13 +125,14 @@ namespace MC.AlphaMotionMnp
 
         private void OnTimerElapsed(object sender, ElapsedEventArgs e) {
             try {
-                _timer.Stop();
+                _timerStatusCheck.Stop();
                 //ScanTime = DateTime.Now - _lastScanTime;
                 RefreshValues();
                 OnValuesRefreshed();
             }
             finally {
-                _timer.Start();
+                if (_isOpen)
+                    _timerStatusCheck.Start();
             }
             //_lastScanTime = DateTime.Now;
         }
@@ -136,14 +145,21 @@ namespace MC.AlphaMotionMnp
         private int UpdateCyclicStatus() {
             uint status = 0;
             int rc = nmiMNApi.nmiGetCyclicStatus(_conNo, ref status);
+            ProcessError(rc, "nmiGetCyclicStatus");
+            if (rc != nmiMNApiDefs.TMC_RV_OK)
+                status = (uint)CyclicStates.Terminate;
 
-            CyclicState = (CyclicStates)status;
+            if (CyclicState != (CyclicStates)status) {
+                CyclicState = (CyclicStates)status;
+                Logger.Trace("CyclicState: " + CyclicState.ToString() + "(" + status.ToString() + ")");
+            }
+
             return rc;
         }
 
         private int ProcessError(int errorCode, string funcName)
         {
-            if (errorCode != nmiMNApiDefs.TMC_RV_OK) {
+            if (errorCode != nmiMNApiDefs.TMC_RV_OK && _lastErrorCode != errorCode) {
                 bool isError = true;
                 switch (errorCode) {
                 // Do not treat as error the following codes:
@@ -161,6 +177,9 @@ namespace MC.AlphaMotionMnp
                 } else {
                     Logger.Debug(funcName + " returns code: " + errorCode.ToString());
                 }
+
+                // Save last error code to prevent error flooding  in log
+                _lastErrorCode = errorCode;
             }
             return errorCode;
         }
