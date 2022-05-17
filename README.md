@@ -20,5 +20,5 @@ In parallel, two applications are running:
 
 ![2022-05-17 WpfMnpDemoApp](https://raw.githubusercontent.com/olex-tech/WpfMnpDemoApp/master/screenshots/2022-05-17%20WpfMnpDemoApp.png)
 
-![2022-05-17 WpfMnpDemoApp + Exer + MotionNetComposer](https://raw.githubusercontent.com/olex-tech/WpfMnpDemoApp/master/screenshots/screenshots/2022-05-17%20WpfMnpDemoApp%20+%20Exer%20+%20MotionNetComposer.png)
+![2022-05-17 WpfMnpDemoApp + Exer + MotionNetComposer](https://raw.githubusercontent.com/olex-tech/WpfMnpDemoApp/master/screenshots/2022-05-17%20WpfMnpDemoApp%20%2B%20Exer%20%2B%20MotionNetComposer.png)
 
