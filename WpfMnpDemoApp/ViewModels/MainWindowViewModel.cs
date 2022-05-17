@@ -2,10 +2,20 @@
 using Prism.Commands;
 using Prism.Mvvm;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Input;
 
 namespace WpfMnpDemoApp.ViewModels
 {
+    public class DIcell : BindableBase
+    {
+        private bool isOn;
+        public bool IsOn {
+            get { return isOn; }
+            set { SetProperty(ref isOn, value); }
+        }
+    }
     class MainWindowViewModel : BindableBase
     {
         public MainWindowViewModel() {
@@ -26,6 +36,9 @@ namespace WpfMnpDemoApp.ViewModels
         }
         private bool _cyclicStateOn;
 
+        public List<DIcell> DigitalInputs { get; } =
+            Enumerable.Range(0, 16).Select(i => new DIcell()).ToList();
+
         public CyclicStates CyclicState {
             get { return _cyclicState; }
             set { SetProperty(ref _cyclicState, value); }
@@ -45,6 +58,10 @@ namespace WpfMnpDemoApp.ViewModels
         private void OnValuesRefreshed(object sender, EventArgs e) {
             CyclicState = _mc.CyclicState;
             CyclicStateOn = CyclicState == CyclicStates.Running;
+
+            for (int i = 0; i < 16; i++) {
+                DigitalInputs[i].IsOn = _mc.DigitalInputs[i];
+            }
         }
 
         private void WindowLoaded() {

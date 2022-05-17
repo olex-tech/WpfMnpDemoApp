@@ -15,7 +15,12 @@ namespace MC.AlphaMotionMnp
 
             _timerStatusCheck = new System.Timers.Timer();
             _timerStatusCheck.Interval = 1000;
-            _timerStatusCheck.Elapsed += OnTimerElapsed;
+            _timerStatusCheck.Elapsed += OnTimerStatusElapsed;
+
+            _timerDICheck = new System.Timers.Timer();
+            _timerDICheck.Interval = 10;
+            _timerDICheck.Elapsed += OnTimerDIElapsed;
+
         }
 
         //~McAlphaMotionMnp() {
@@ -37,6 +42,8 @@ namespace MC.AlphaMotionMnp
             if (_isOpen) {
                 Logger.Debug("Start STATUS_CHECK timer. Interval: " + _timerStatusCheck.Interval.ToString() + "ms");
                 _timerStatusCheck.Start();
+                Logger.Debug("Start DI_CHECK timer. Interval: " + _timerDICheck.Interval.ToString() + "ms");
+                _timerDICheck.Start();
             }
 
             return rc;
@@ -104,13 +111,19 @@ namespace MC.AlphaMotionMnp
         /// Additional default station number
         /// </summary>
         private readonly int _staNo = 1;
+        private readonly int _maxDI = 16;
 
         private int _boardNum = 0;
         private bool _isOpen = false;
 
-        private readonly System.Timers.Timer _timerStatusCheck; 
+        private readonly System.Timers.Timer _timerStatusCheck;
+        private readonly System.Timers.Timer _timerDICheck;
+
         private volatile object _locker = new object();
         private int _lastErrorCode = 0;
+
+        public List<bool> DigitalInputs { get; } =
+            Enumerable.Range(0, 16).Select(i => new bool()).ToList();
 
         private int Initialize() {
             int rc = 0;
@@ -123,7 +136,7 @@ namespace MC.AlphaMotionMnp
             }
         }
 
-        private void OnTimerElapsed(object sender, ElapsedEventArgs e) {
+        private void OnTimerStatusElapsed(object sender, ElapsedEventArgs e) {
             try {
                 _timerStatusCheck.Stop();
                 //ScanTime = DateTime.Now - _lastScanTime;
@@ -133,6 +146,24 @@ namespace MC.AlphaMotionMnp
             finally {
                 if (_isOpen)
                     _timerStatusCheck.Start();
+            }
+            //_lastScanTime = DateTime.Now;
+        }
+
+        private void OnTimerDIElapsed(object sender, ElapsedEventArgs e) {
+            try {
+                _timerDICheck.Stop();
+                bool isModified = false;
+                lock (_locker) {
+                    isModified = UpdateDigitalInputs();
+                }
+                if (isModified) {
+                    OnValuesRefreshed();
+                }
+            }
+            finally {
+                if (_isOpen)
+                    _timerDICheck.Start();
             }
             //_lastScanTime = DateTime.Now;
         }
@@ -156,6 +187,23 @@ namespace MC.AlphaMotionMnp
 
             return rc;
         }
+
+        private bool UpdateDigitalInputs() {
+            bool isModified = false;
+            uint uiData = 0;
+            for (int nbit = 0; nbit < _maxDI; nbit++) {
+                int rc = nmiMNApi.nmiDiGetBit(_conNo, _staNo, nbit, ref uiData);
+                //ProcessError(rc, "nmiDiGetBit");
+                
+                bool isOn = uiData == 1;
+                if (rc == nmiMNApiDefs.TMC_RV_OK && DigitalInputs[nbit] != isOn)
+                    isModified = true;
+
+                DigitalInputs[nbit] = isOn;
+            }
+            return isModified;
+        }
+
 
         private int ProcessError(int errorCode, string funcName)
         {
