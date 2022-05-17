@@ -18,7 +18,7 @@ In parallel, two applications are running:
 - Alpha Motion Net Composer
 - Techvalley X-Ray Inspection System (Exer)
 
-![2022-05-17 WpfMnpDemoApp](screenshots\2022-05-17 WpfMnpDemoApp.png)
+![2022-05-17 WpfMnpDemoApp](https://raw.githubusercontent.com/olex-tech/WpfMnpDemoApp/master/screenshots/2022-05-17%20WpfMnpDemoApp.png)
 
 ![2022-05-17 WpfMnpDemoApp + Exer + MotionNetComposer](screenshots\2022-05-17 WpfMnpDemoApp + Exer + MotionNetComposer.png)
 
