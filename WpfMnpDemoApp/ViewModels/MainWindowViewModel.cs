@@ -8,6 +8,25 @@ using System.Windows.Input;
 
 namespace WpfMnpDemoApp.ViewModels
 {
+    public class DoubleValue : BindableBase
+    {
+        private double _value;
+        public double Value {
+            get { return _value; }
+            set { SetProperty(ref _value, value); }
+        }
+    }
+
+    public class AxisItemTranspose : BindableBase
+    {
+        string paramName;
+        public string ParamName {
+            get { return paramName; }
+            set { SetProperty(ref paramName, value); }
+        }
+        public List<DoubleValue> Items { get; } =
+            Enumerable.Range(0, 8).Select(i => new DoubleValue()).ToList();
+    }
     public class AxisRuntime : BindableBase
     {
         string axisName;
@@ -60,6 +79,10 @@ namespace WpfMnpDemoApp.ViewModels
 
             OnValuesRefreshed(null, null);
             _mc.ValuesRefreshed += OnValuesRefreshed;
+
+            AxesTranspose[0].ParamName = "CommandPos";
+            AxesTranspose[1].ParamName = "ActualPos";
+            AxesTranspose[2].ParamName = "Velocity";
         }
 
         public bool CyclicStateOn {
@@ -79,6 +102,9 @@ namespace WpfMnpDemoApp.ViewModels
 
         public List<AxisRuntime> Axes { get; } =
             Enumerable.Range(0, 8).Select(i => new AxisRuntime(i)).ToList();
+
+        public List<AxisItemTranspose> AxesTranspose { get; } =
+            Enumerable.Range(0, 3).Select(i => new AxisItemTranspose()).ToList();
 
 
         //public ICommand SysComBeginCommand { get; private set; }
@@ -104,8 +130,14 @@ namespace WpfMnpDemoApp.ViewModels
                 Axes[i].FeedbackPos = _mc.Axes[i].FeedbackPos;
                 Axes[i].Speed = _mc.Axes[i].Speed;
             }
-        }
 
+            // Prepare data for transposing view
+            for (int i = 0; i < 8; i++) {
+                AxesTranspose[0].Items[i].Value = Axes[i].CommandPos;
+                AxesTranspose[1].Items[i].Value = Axes[i].FeedbackPos;
+                AxesTranspose[2].Items[i].Value = Axes[i].Speed;
+            }
+        }
         private void WindowLoaded() {
             _mc.OpenDevice();
         }

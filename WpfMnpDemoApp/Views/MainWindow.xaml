@@ -8,7 +8,7 @@
         xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:WpfMnpDemoApp"
         mc:Ignorable="d"
-        Title="WpfMnpDemoApp" Height="400" Width="400">
+        Title="WpfMnpDemoApp" Height="550" Width="640">
     <Behaviors:Interaction.Triggers>
         <Behaviors:EventTrigger EventName="Loaded">
             <Behaviors:InvokeCommandAction Command="{Binding WindowLoadedCommand}" />
@@ -25,6 +25,7 @@
     </Window.DataContext>
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
@@ -76,16 +77,77 @@
             </Grid>
         </StackPanel>
 
-        <DataGrid x:Name="Imported" Grid.Column="1" Grid.Row="3" VerticalAlignment="Top"
-          ItemsSource="{Binding Axes}" Width="300" HorizontalAlignment="Left"
+        <!-- DockPanel is used to apply auto height of control -->
+        <DockPanel Grid.Column="1" Grid.Row="3" LastChildFill="true">
+            <!--Width="350" Height="200" -->
+            <ListView DockPanel.Dock="Top" ItemsSource="{Binding Axes}"
+                    HorizontalAlignment="Left">
+                <!--Disable selection styles -->
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListViewItem}">
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected"
+                         Value="True">
+                                <Setter Property="Background" Value="{x:Null}" />
+                                <Setter Property="BorderBrush" Value="{x:Null}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Axis Name" Width="70" DisplayMemberBinding="{Binding AxisName}"/>
+                        <GridViewColumn Header="Command Pos" Width="90" DisplayMemberBinding="{Binding CommandPos}"/>
+                        <GridViewColumn Header="Feedback Pos" Width="90" DisplayMemberBinding="{Binding FeedbackPos}"/>
+                        <GridViewColumn Header="Current Velocity" Width="95" DisplayMemberBinding="{Binding Speed}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </DockPanel>
+
+        <!-- DockPanel is used to apply auto height of control -->
+        <DockPanel Grid.Column="1" Grid.Row="4" LastChildFill="true">
+            <!--Width="350" Height="200" -->
+            <ListView Margin="0,20,0,0" DockPanel.Dock="Top" ItemsSource="{Binding AxesTranspose}"
+                    HorizontalAlignment="Left">
+                <!--Disable selection styles -->
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListViewItem}">
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected"
+                         Value="True">
+                                <Setter Property="Background" Value="{x:Null}" />
+                                <Setter Property="BorderBrush" Value="{x:Null}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="" Width="90" DisplayMemberBinding="{Binding ParamName}"/>
+                        <GridViewColumn Header="Axis0" Width="60" DisplayMemberBinding="{Binding Items[0].Value}"/>
+                        <GridViewColumn Header="Axis1" Width="60" DisplayMemberBinding="{Binding Items[1].Value}"/>
+                        <GridViewColumn Header="Axis2" Width="60" DisplayMemberBinding="{Binding Items[2].Value}"/>
+                        <GridViewColumn Header="Axis3" Width="60" DisplayMemberBinding="{Binding Items[3].Value}"/>
+                        <GridViewColumn Header="Axis4" Width="60" DisplayMemberBinding="{Binding Items[4].Value}"/>
+                        <GridViewColumn Header="Axis5" Width="60" DisplayMemberBinding="{Binding Items[5].Value}"/>
+                        <GridViewColumn Header="Axis6" Width="60" DisplayMemberBinding="{Binding Items[6].Value}"/>
+                        <GridViewColumn Header="Axis7" Width="60" DisplayMemberBinding="{Binding Items[7].Value}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </DockPanel>
+
+        <!--<DataGrid Grid.Column="1" Grid.Row="4" VerticalAlignment="Top"
+          ItemsSource="{Binding Axes}" Width="350" HorizontalAlignment="Left"
           AutoGenerateColumns="False" CanUserResizeColumns="True">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="AxisName" Binding="{Binding AxisName}"/>
-                <DataGridTextColumn Header="CommandPos" Binding="{Binding CommandPos}"/>
-                <DataGridTextColumn Header="FeedbackPos" Binding="{Binding FeedbackPos}"/>
-                <DataGridTextColumn Header="Speed" Binding="{Binding Speed}"/>
+                <DataGridTextColumn Header="Axis Name" Binding="{Binding AxisName}"/>
+                <DataGridTextColumn Header="Command Pos" Binding="{Binding CommandPos}"/>
+                <DataGridTextColumn Header="Feedback Pos" Binding="{Binding FeedbackPos}"/>
+                <DataGridTextColumn Header="Current Velocity" Binding="{Binding Speed}"/>
             </DataGrid.Columns>
-        </DataGrid>
+        </DataGrid>-->
 
     </Grid>
 </Window>
