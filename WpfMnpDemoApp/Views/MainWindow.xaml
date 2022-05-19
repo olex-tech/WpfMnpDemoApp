@@ -110,6 +110,13 @@
             <!--Width="350" Height="200" -->
             <ListView Margin="0,20,0,0" DockPanel.Dock="Top" ItemsSource="{Binding AxesTranspose}"
                     HorizontalAlignment="Left">
+                <!-- Left aligned column names -->
+                <ListView.Resources>
+                    <Style TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="HorizontalContentAlignment" Value="Left" />
+                    </Style>
+                </ListView.Resources>
+
                 <!--Disable selection styles -->
                 <ListView.ItemContainerStyle>
                     <Style TargetType="{x:Type ListViewItem}">
