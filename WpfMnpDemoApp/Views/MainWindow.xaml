@@ -8,7 +8,7 @@
         xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:WpfMnpDemoApp"
         mc:Ignorable="d"
-        Title="{DynamicResource mw_Title}" Height="550" Width="640">
+        Title="{DynamicResource mw_Title}" Height="600" Width="800">
     <Behaviors:Interaction.Triggers>
         <Behaviors:EventTrigger EventName="Loaded">
             <Behaviors:InvokeCommandAction Command="{Binding WindowLoadedCommand}" />
@@ -53,9 +53,9 @@
 
         <StackPanel Grid.Column="1" Grid.Row="1" Margin="10">
             <StackPanel Orientation="Horizontal">
-                <Button Content="{DynamicResource mw_CyclicBegin}" Margin="0,0,0,0"  Width="100"
+                <Button Content="{DynamicResource mw_CyclicBegin}" Margin="0,0,0,0"  Width="Auto"
                     Command="{Binding CycleBeginCommand, Mode=OneWay}"/>
-                <Button Content="{DynamicResource mw_CyclicEnd}"  Margin="10,0,0,0"  Width="100" 
+                <Button Content="{DynamicResource mw_CyclicEnd}"  Margin="10,0,0,0"  Width="Auto" 
                     Command="{Binding CycleEndCommand, Mode=OneWay}"/>
             </StackPanel>
             <StackPanel  Margin="5">
@@ -104,10 +104,10 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="{DynamicResource mw_AxisNames}" Width="70" DisplayMemberBinding="{Binding AxisName}"/>
-                        <GridViewColumn Header="{DynamicResource mw_CommandPos}" Width="90" DisplayMemberBinding="{Binding CommandPos}"/>
-                        <GridViewColumn Header="{DynamicResource mw_ActualPos}" Width="90" DisplayMemberBinding="{Binding FeedbackPos}"/>
-                        <GridViewColumn Header="{DynamicResource mw_CurrentVelocity}" Width="95" DisplayMemberBinding="{Binding Speed}"/>
+                        <GridViewColumn Header="{DynamicResource mw_AxisNames}" Width="100" DisplayMemberBinding="{Binding AxisName}"/>
+                        <GridViewColumn Header="{DynamicResource mw_CommandPos}" Width="120" DisplayMemberBinding="{Binding CommandPos}"/>
+                        <GridViewColumn Header="{DynamicResource mw_ActualPos}" Width="120" DisplayMemberBinding="{Binding FeedbackPos}"/>
+                        <GridViewColumn Header="{DynamicResource mw_CurrentVelocity}" Width="120" DisplayMemberBinding="{Binding Speed}"/>
                     </GridView>
                 </ListView.View>
             </ListView>
@@ -139,7 +139,7 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="" Width="90" DisplayMemberBinding="{Binding ParamName}"/>
+                        <GridViewColumn Header="" DisplayMemberBinding="{Binding ParamName}"/>
                         <GridViewColumn Header="Axis0" Width="60" DisplayMemberBinding="{Binding Items[0].Value}"/>
                         <GridViewColumn Header="Axis1" Width="60" DisplayMemberBinding="{Binding Items[1].Value}"/>
                         <GridViewColumn Header="Axis2" Width="60" DisplayMemberBinding="{Binding Items[2].Value}"/>
