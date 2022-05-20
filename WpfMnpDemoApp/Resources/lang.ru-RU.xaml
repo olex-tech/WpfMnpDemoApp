@@ -1,0 +1,16 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:v="clr-namespace:System;assembly=mscorlib">
+    <v:String x:Key="mw_Title">WPFMnpDemoApp Локализация</v:String>
+    <v:String x:Key="mw_MenuLanguage">Language</v:String>
+    <v:String x:Key="mw_CyclicBegin">Циклический Старт</v:String>
+    <v:String x:Key="mw_CyclicEnd">Циклический Стоп</v:String>
+    <v:String x:Key="mw_CyclicState">Циклическое Состояние: </v:String>
+
+    <v:String x:Key="mw_DigitalInputIO">Цифровой ввод I/O:</v:String>
+
+    <v:String x:Key="mw_AxisNames">Имена осей</v:String>
+    <v:String x:Key="mw_CommandPos">Командная Позиция</v:String>
+    <v:String x:Key="mw_ActualPos">Фактическая Позиция</v:String>
+    <v:String x:Key="mw_CurrentVelocity">Текущая Скорость</v:String>
+</ResourceDictionary>

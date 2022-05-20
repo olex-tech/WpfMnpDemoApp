@@ -1,0 +1,16 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:v="clr-namespace:System;assembly=mscorlib">
+    <v:String x:Key="mw_Title">WPFMnpDemoApp 현지화</v:String>
+    <v:String x:Key="mw_MenuLanguage">Language</v:String>
+    <v:String x:Key="mw_CyclicBegin">순환 시작하다</v:String>
+    <v:String x:Key="mw_CyclicEnd">순환 종료</v:String>
+    <v:String x:Key="mw_CyclicState">순환 상태: </v:String>
+
+    <v:String x:Key="mw_DigitalInputIO">디지털 입력 I/O:</v:String>
+
+    <v:String x:Key="mw_AxisNames">축 이름</v:String>
+    <v:String x:Key="mw_CommandPos">명령 위치</v:String>
+    <v:String x:Key="mw_ActualPos">실제 위치</v:String>
+    <v:String x:Key="mw_CurrentVelocity">전류 속도</v:String>
+</ResourceDictionary>

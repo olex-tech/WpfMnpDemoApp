@@ -8,7 +8,7 @@
         xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:WpfMnpDemoApp"
         mc:Ignorable="d"
-        Title="WpfMnpDemoApp" Height="550" Width="640">
+        Title="{DynamicResource mw_Title}" Height="550" Width="640">
     <Behaviors:Interaction.Triggers>
         <Behaviors:EventTrigger EventName="Loaded">
             <Behaviors:InvokeCommandAction Command="{Binding WindowLoadedCommand}" />
@@ -23,6 +23,12 @@
     <Window.DataContext>
         <vm:MainWindowViewModel />
     </Window.DataContext>
+    <StackPanel>
+    <DockPanel Grid.Column="0" Grid.Row="0" Grid.RowSpan="2">
+        <Menu DockPanel.Dock="Top" Background="{x:Null}" >
+            <MenuItem x:Name="menuLanguage" Header="{DynamicResource mw_MenuLanguage}" />
+        </Menu>
+    </DockPanel>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -37,6 +43,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
+        
         <Ellipse Grid.Column="0" Grid.Row="1" Width="19" Height="18" Margin="5"
                  HorizontalAlignment="Center"
                  VerticalAlignment="Center"
@@ -46,19 +53,20 @@
 
         <StackPanel Grid.Column="1" Grid.Row="1" Margin="10">
             <StackPanel Orientation="Horizontal">
-                <Button Content="Cycle Begin" Margin="0,0,0,0"  Width="100"
+                <Button Content="{DynamicResource mw_CyclicBegin}" Margin="0,0,0,0"  Width="100"
                     Command="{Binding CycleBeginCommand, Mode=OneWay}"/>
-                <Button Content="Cycle End"  Margin="10,0,0,0"  Width="100" 
+                <Button Content="{DynamicResource mw_CyclicEnd}"  Margin="10,0,0,0"  Width="100" 
                     Command="{Binding CycleEndCommand, Mode=OneWay}"/>
             </StackPanel>
             <StackPanel  Margin="5">
-                <TextBlock Text="{Binding CyclicState, StringFormat=Cyclic state: {0}}"></TextBlock>
+                    <!--<TextBlock Text="{Binding CyclicState, StringFormat=Cyclic State: {0}}"></TextBlock>-->
+                    <TextBlock Text="{Binding CyclicStateString}"></TextBlock>
             </StackPanel>
         </StackPanel>
 
         <StackPanel Grid.Column="1" Grid.Row="2" Margin="10" Orientation="Vertical">
             <StackPanel  Margin="0">
-                <TextBlock Text="Digital Inputs I/O:"></TextBlock>
+                <TextBlock Text="{DynamicResource mw_DigitalInputIO}"></TextBlock>
             </StackPanel>
             <Grid Margin="10" Width="176" Height="44" HorizontalAlignment="Left">
                 <ItemsControl ItemsSource="{Binding DigitalInputs}">
@@ -96,10 +104,10 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Axis Name" Width="70" DisplayMemberBinding="{Binding AxisName}"/>
-                        <GridViewColumn Header="Command Pos" Width="90" DisplayMemberBinding="{Binding CommandPos}"/>
-                        <GridViewColumn Header="Feedback Pos" Width="90" DisplayMemberBinding="{Binding FeedbackPos}"/>
-                        <GridViewColumn Header="Current Velocity" Width="95" DisplayMemberBinding="{Binding Speed}"/>
+                        <GridViewColumn Header="{DynamicResource mw_AxisNames}" Width="70" DisplayMemberBinding="{Binding AxisName}"/>
+                        <GridViewColumn Header="{DynamicResource mw_CommandPos}" Width="90" DisplayMemberBinding="{Binding CommandPos}"/>
+                        <GridViewColumn Header="{DynamicResource mw_ActualPos}" Width="90" DisplayMemberBinding="{Binding FeedbackPos}"/>
+                        <GridViewColumn Header="{DynamicResource mw_CurrentVelocity}" Width="95" DisplayMemberBinding="{Binding Speed}"/>
                     </GridView>
                 </ListView.View>
             </ListView>
@@ -157,4 +165,5 @@
         </DataGrid>-->
 
     </Grid>
+    </StackPanel>
 </Window>

@@ -1,0 +1,16 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:v="clr-namespace:System;assembly=mscorlib">
+    <v:String x:Key="mw_Title">WPFMnpDemoApp Localization</v:String>
+    <v:String x:Key="mw_MenuLanguage">Language</v:String>
+    <v:String x:Key="mw_CyclicBegin">Cyclic Begin</v:String>
+    <v:String x:Key="mw_CyclicEnd">Cyclic End</v:String>
+    <v:String x:Key="mw_CyclicState">Cyclic State: </v:String>
+
+    <v:String x:Key="mw_DigitalInputIO">Digital Input I/O:</v:String>
+
+    <v:String x:Key="mw_AxisNames">Axis Names</v:String>
+    <v:String x:Key="mw_CommandPos">Command Position</v:String>
+    <v:String x:Key="mw_ActualPos">Actual Position</v:String>
+    <v:String x:Key="mw_CurrentVelocity">Current Velocity</v:String>
+</ResourceDictionary>

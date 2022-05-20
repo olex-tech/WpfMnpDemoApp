@@ -4,6 +4,7 @@ using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 
 namespace WpfMnpDemoApp.ViewModels
@@ -77,12 +78,23 @@ namespace WpfMnpDemoApp.ViewModels
             CycleBeginCommand = new DelegateCommand(CycleBegin);
             CycleEndCommand = new DelegateCommand(CycleEnd);
 
+            UpdateAxesTransposeParamNames();
+
             OnValuesRefreshed(null, null);
             _mc.ValuesRefreshed += OnValuesRefreshed;
+        }
 
-            AxesTranspose[0].ParamName = "CommandPos";
-            AxesTranspose[1].ParamName = "ActualPos";
-            AxesTranspose[2].ParamName = "Velocity";
+        private void UpdateAxesTransposeParamNames() {
+            var rd = App.Current.Resources.MergedDictionaries[0];
+            if (rd != null) {
+                AxesTranspose[0].ParamName = rd["mw_CommandPos"].ToString();
+                AxesTranspose[1].ParamName = rd["mw_ActualPos"].ToString();
+                AxesTranspose[2].ParamName = rd["mw_CurrentVelocity"].ToString();
+            } else {
+                AxesTranspose[0].ParamName = "CommandPos";
+                AxesTranspose[1].ParamName = "ActualPos";
+                AxesTranspose[2].ParamName = "Velocity";
+            }
         }
 
         public bool CyclicStateOn {
@@ -91,6 +103,16 @@ namespace WpfMnpDemoApp.ViewModels
         }
         private bool _cyclicStateOn;
 
+        public string CyclicStateString {
+            get {
+                var rd = App.Current.Resources.MergedDictionaries[0];
+                if (rd != null && rd["mw_CyclicState"] != null) { 
+                    return rd["mw_CyclicState"].ToString() + _cyclicState.ToString(); }
+                else {
+                    return "Cyclic_State: " + _cyclicState.ToString();
+                }
+            }
+        }
         public CyclicStates CyclicState {
             get { return _cyclicState; }
             set { SetProperty(ref _cyclicState, value); }
@@ -137,6 +159,8 @@ namespace WpfMnpDemoApp.ViewModels
                 AxesTranspose[1].Items[i].Value = Axes[i].FeedbackPos;
                 AxesTranspose[2].Items[i].Value = Axes[i].Speed;
             }
+
+            UpdateAxesTransposeParamNames();
         }
         private void WindowLoaded() {
             _mc.OpenDevice();
