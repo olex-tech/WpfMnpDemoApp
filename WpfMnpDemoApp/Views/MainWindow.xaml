@@ -58,9 +58,9 @@
                 <Button Content="{DynamicResource mw_CyclicEnd}"  Margin="10,0,0,0"  Width="Auto" 
                     Command="{Binding CycleEndCommand, Mode=OneWay}"/>
             </StackPanel>
-            <StackPanel  Margin="5">
-                    <!--<TextBlock Text="{Binding CyclicState, StringFormat=Cyclic State: {0}}"></TextBlock>-->
-                    <TextBlock Text="{Binding CyclicStateString}"></TextBlock>
+            <StackPanel  Margin="5" Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource mw_CyclicState}"></TextBlock>
+                    <TextBlock Margin="5,0,0,0" Text="{Binding ConnectionState}"></TextBlock>
             </StackPanel>
         </StackPanel>
 

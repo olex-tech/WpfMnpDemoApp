@@ -1,26 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace MC.AlphaMotionMnp
 {
-    public abstract class McBase
+    public interface IIoExecutor {
+        bool GetDI(int ioNumber, bool dafaultVal);
+        bool GetDO(int ioNumber, bool dafaultVal);
+        int SetDO(int ioNumber, bool dafaultVal);
+    }
+
+    public struct Axis
     {
-        public abstract int OpenDevice();
-        public abstract int CloseDevice();
+        public string Name { get; set; }
+        public int Channel { get; set; }
+    }
 
-        public abstract int Start();
-        public abstract int Stop();
+    public interface IMotionExecutor : IIoExecutor
+    {
+        ConnectionStates ConnectionState { get; }
 
-        public abstract int GetInBit(int diBit, bool defaultVal);
-        public abstract int GetOutBit(int doBit, bool defaultVal);
-        public abstract int SetOutBit(int doBit, bool onVal);
+        int OpenDevice();
+        int CloseDevice();
 
-        public abstract int StartJog(int axisIndex, bool plusVal);
-        public abstract int StopJog(int axisIndex);
+        int Start();
+        int Stop();
 
-        public abstract int AbsMove(int axisIndex, int absPosition);
+        int StartJog(Axis axis, bool plusVal);
+        int StopJog(Axis axis);
+
+        int AbsMove(Axis axis, int absPosition);
+        int StopMove(Axis axis);
+
+        event EventHandler ValuesRefreshed;
+
+        double GetCommandPos(int index);
+        double GetActualPos(int index);
+        double GetRuntimeVelocity(int index);
     }
 }

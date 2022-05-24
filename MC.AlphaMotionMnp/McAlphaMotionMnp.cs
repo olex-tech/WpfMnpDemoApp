@@ -9,25 +9,12 @@ using EasyLogger;
 namespace MC.AlphaMotionMnp
 {
     public class AxisRuntime {
-        string axisName;
-        double commandPos;
-        double feedbackPos;
-        double speed;
-
-        public AxisRuntime(int index) {
-            axisName = "Axis" + index.ToString();
-            commandPos = 0;
-            feedbackPos = 0;
-            speed = 0;
-        }
-        public string AxisName { get; set; }
         public double CommandPos { get; set; }
         public double FeedbackPos { get; set; }
         public double Speed { get; set; }
 
     };
-    public class McAlphaMotionMnp : McBase
-    {
+    public class McAlphaMotionMnp : IMotionExecutor {
         public McAlphaMotionMnp() {
             Logger = Log.Get<McAlphaMotionMnp>();
 
@@ -39,11 +26,13 @@ namespace MC.AlphaMotionMnp
             _timerDICheck.Interval = 10;
             _timerDICheck.Elapsed += OnTimerDIElapsed;
 
+            ConnectionState = ConnectionStates.Error;
         }
 
-        public CyclicStates CyclicState { get; private set; }
+        public ConnectionStates ConnectionState { get; private set; }
 
-        public override int OpenDevice() {
+        #region MotionExecutor
+        public int OpenDevice() {
             if (_isOpen) {
                 Logger.Trace("Already load device");
             }
@@ -62,7 +51,7 @@ namespace MC.AlphaMotionMnp
 
             return rc;
         }
-        public override int CloseDevice() {
+        public int CloseDevice() {
             int rc = 1;
             if (_isOpen) {
                 Logger.Trace("nmiSysUnLoad");
@@ -76,7 +65,7 @@ namespace MC.AlphaMotionMnp
             return rc;
         }
 
-        public override int Start() {
+        public int Start() {
             Logger.Trace("nmiSysComm");
             int rc = nmiMNApi.nmiSysComm(_conNo);
             ProcessError(rc, "nmiSysComm");
@@ -95,27 +84,40 @@ namespace MC.AlphaMotionMnp
             return rc;
         }
 
-        public override int Stop() {
+        public int Stop() {
             Logger.Trace("nmiCyclicEnd");
             int rc = nmiMNApi.nmiCyclicEnd(_conNo);
             ProcessError(rc, "nmiCyclicEnd");
-            CyclicState = CyclicStates.Terminate;
+            ConnectionState = ConnectionStates.Terminate;
 
             return rc;
         }
 
-        public override int GetInBit(int diBit, bool defaultVal) { return 0; }
-        public override int GetOutBit(int doBit, bool defaultVal) { return 0; }
-        public override int SetOutBit(int doBit, bool onVal) { return 0; }
+        public int StartJog(Axis axis, bool plusVal) { return 0; }
+        public int StopJog(Axis axis) { return 0; }
 
-        public override int StartJog(int axisIndex, bool plusVal) { return 0; }
-        public override int StopJog(int axisIndex) { return 0; }
+        public int AbsMove(Axis axis, int absPosition) { return 0; }
+        public int StopMove(Axis axis) {
+            throw new NotImplementedException();
+        }
 
-        public override int AbsMove(int axisIndex, int absPosition) { return 0; }
+        public double GetCommandPos(int index) { return Axes[index].CommandPos; }
+        public double GetActualPos(int index) { return Axes[index].FeedbackPos; }
+        public double GetRuntimeVelocity(int index) { return Axes[index].Speed; }
 
+        #endregion // MotionExecutor
 
         public event EventHandler ValuesRefreshed;
 
+
+        public List<bool> DigitalInputs { get; } =
+            Enumerable.Range(0, 16).Select(i => new bool()).ToList();
+
+        public List<AxisRuntime> Axes { get; } =
+            Enumerable.Range(0, 8).Select(i => new AxisRuntime()).ToList();
+
+
+        #region PrivateData
         private Log Logger { get; set; }
         /// <summary>
         /// Default controller number
@@ -136,16 +138,9 @@ namespace MC.AlphaMotionMnp
         private volatile object _locker = new object();
         private int _lastErrorCode = 0;
 
-        public List<bool> DigitalInputs { get; } =
-            Enumerable.Range(0, 16).Select(i => new bool()).ToList();
+        #endregion // PrivateData
 
-        public List<AxisRuntime> Axes { get; } =
-            Enumerable.Range(0, 8).Select(i => new AxisRuntime(i)).ToList();
-
-        private int Initialize() {
-            int rc = 0;
-            return rc;
-        }
+        #region PrivateFunctions
 
         private void RefreshValues() {
             lock (_locker) {
@@ -193,12 +188,14 @@ namespace MC.AlphaMotionMnp
             uint status = 0;
             int rc = nmiMNApi.nmiGetCyclicStatus(_conNo, ref status);
             ProcessError(rc, "nmiGetCyclicStatus");
-            if (rc != nmiMNApiDefs.TMC_RV_OK)
-                status = (uint)CyclicStates.Terminate;
+            if (rc != nmiMNApiDefs.TMC_RV_OK) {
+                status = (uint)ConnectionStates.Terminate;
+                Logger.Trace("nmiGetCyclicStatus failed. Set ConnectionState to " + status.ToString());
+            }
 
-            if (CyclicState != (CyclicStates)status) {
-                CyclicState = (CyclicStates)status;
-                Logger.Trace("CyclicState: " + CyclicState.ToString() + "(" + status.ToString() + ")");
+            if (ConnectionState != (ConnectionStates)status) {
+                ConnectionState = (ConnectionStates)status;
+                Logger.Trace("ConnectionState: " + ConnectionState.ToString() + "(" + status.ToString() + ")");
             }
 
             return rc;
@@ -248,18 +245,17 @@ namespace MC.AlphaMotionMnp
             return isModified;
         }
 
-        private int ProcessError(int errorCode, string funcName)
-        {
+        private int ProcessError(int errorCode, string funcName) {
             if (errorCode != nmiMNApiDefs.TMC_RV_OK && _lastErrorCode != errorCode) {
                 bool isError = true;
                 switch (errorCode) {
-                // Do not treat as error the following codes:
-                case nmiMNApiDefs.TMC_RV_STOP_P_S_END_ERR: // -200 //(SLMT+)
-                case nmiMNApiDefs.TMC_RV_STOP_N_S_END_ERR: // -201 //(SLMT-)
-                case nmiMNApiDefs.TMC_RV_STOP_P_H_END_ERR: // -205 //(LMT+)
-                case nmiMNApiDefs.TMC_RV_STOP_N_H_END_ERR: // -206 //(LMT-)
-                    isError = false;
-                    break;
+                    // Do not treat as error the following codes:
+                    case nmiMNApiDefs.TMC_RV_STOP_P_S_END_ERR: // -200 //(SLMT+)
+                    case nmiMNApiDefs.TMC_RV_STOP_N_S_END_ERR: // -201 //(SLMT-)
+                    case nmiMNApiDefs.TMC_RV_STOP_P_H_END_ERR: // -205 //(LMT+)
+                    case nmiMNApiDefs.TMC_RV_STOP_N_H_END_ERR: // -206 //(LMT-)
+                        isError = false;
+                        break;
                 }
 
                 // TODO: Display Error description from external csv file
@@ -275,5 +271,57 @@ namespace MC.AlphaMotionMnp
             return errorCode;
         }
 
+        public bool GetDI(int ioNumber, bool dafaultVal) {
+            return DigitalInputs[ioNumber];
+        }
+
+        public bool GetDO(int ioNumber, bool dafaultVal) {
+            throw new NotImplementedException();
+        }
+
+        public int SetDO(int ioNumber, bool dafaultVal) {
+            throw new NotImplementedException();
+        }
+
+        #endregion // PrivateFunctions
     }
+
+    //public class MotionController {
+    //    public MotionController(ref MotionExecutor motion) {
+    //        _motionExecutor = motion;
+    //    }
+
+    //    #region MotionExecutor
+    //    public int OpenDevice() {
+    //        return _motionExecutor.OpenDevice();
+    //    }
+    //    public int CloseDevice() {
+    //        return _motionExecutor.CloseDevice();
+    //    }
+
+    //    public int Start() {
+    //        return _motionExecutor.Start();
+    //    }
+
+    //    public int Stop() {
+    //        return _motionExecutor.Stop();
+    //    }
+
+    //    public int StartJog(Axis axis, bool plusVal) {
+    //        return _motionExecutor.StartJog(axis, plusVal);
+    //    }
+    //    public int StopJog(Axis axis) {
+    //        return _motionExecutor.StopJog(axis);
+    //    }
+
+    //    public int AbsMove(Axis axis, int absPosition) {
+    //        return _motionExecutor.AbsMove(axis, absPosition);
+    //    }
+    //    public int StopMove(Axis axis) {
+    //        return _motionExecutor.StopMove(axis);
+    //    }
+    //    #endregion // MotionExecutor
+
+    //    private MotionExecutor _motionExecutor;
+    //}
 }

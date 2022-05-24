@@ -20,52 +20,52 @@ namespace WpfMnpDemoApp.ViewModels
 
     public class AxisItemTranspose : BindableBase
     {
-        string paramName;
+        string _paramName;
         public string ParamName {
-            get { return paramName; }
-            set { SetProperty(ref paramName, value); }
+            get { return _paramName; }
+            set { SetProperty(ref _paramName, value); }
         }
         public List<DoubleValue> Items { get; } =
             Enumerable.Range(0, 8).Select(i => new DoubleValue()).ToList();
     }
     public class AxisRuntime : BindableBase
     {
-        string axisName;
-        double commandPos;
-        double feedbackPos;
-        double speed;
+        string _axisName;
+        double _commandPos;
+        double _feedbackPos;
+        double _speed;
 
         public AxisRuntime(int index) {
-            axisName = "Axis" + index.ToString();
-            commandPos = 0;
-            feedbackPos = 0;
-            speed = 0;
+            _axisName = "Axis" + index.ToString();
+            _commandPos = 0;
+            _feedbackPos = 0;
+            _speed = 0;
         }
         public string AxisName {
-            get { return axisName; }
-            set { SetProperty(ref axisName, value); }
+            get { return _axisName; }
+            set { SetProperty(ref _axisName, value); }
         }
 
         public double CommandPos {
-            get { return commandPos; }
-            set { SetProperty(ref commandPos, value); }
+            get { return _commandPos; }
+            set { SetProperty(ref _commandPos, value); }
         }
         public double FeedbackPos {
-            get { return feedbackPos; }
-            set { SetProperty(ref feedbackPos, value); }
+            get { return _feedbackPos; }
+            set { SetProperty(ref _feedbackPos, value); }
         }
         public double Speed {
-            get { return speed; }
-            set { SetProperty(ref speed, value); }
+            get { return _speed; }
+            set { SetProperty(ref _speed, value); }
         }
     }
 
     public class DIcell : BindableBase
     {
-        private bool isOn;
+        private bool _isOn;
         public bool IsOn {
-            get { return isOn; }
-            set { SetProperty(ref isOn, value); }
+            get { return _isOn; }
+            set { SetProperty(ref _isOn, value); }
         }
     }
     class MainWindowViewModel : BindableBase
@@ -103,21 +103,11 @@ namespace WpfMnpDemoApp.ViewModels
         }
         private bool _cyclicStateOn;
 
-        public string CyclicStateString {
-            get {
-                var rd = App.Current.Resources.MergedDictionaries[0];
-                if (rd != null && rd["mw_CyclicState"] != null) { 
-                    return rd["mw_CyclicState"].ToString() + _cyclicState.ToString(); }
-                else {
-                    return "Cyclic_State: " + _cyclicState.ToString();
-                }
-            }
+        public ConnectionStates ConnectionState {
+            get { return _connectionState; }
+            set { SetProperty(ref _connectionState, value); }
         }
-        public CyclicStates CyclicState {
-            get { return _cyclicState; }
-            set { SetProperty(ref _cyclicState, value); }
-        }
-        private CyclicStates _cyclicState;
+        private ConnectionStates _connectionState;
 
         public List<DIcell> DigitalInputs { get; } =
             Enumerable.Range(0, 16).Select(i => new DIcell()).ToList();
@@ -137,20 +127,20 @@ namespace WpfMnpDemoApp.ViewModels
         public ICommand CycleEndCommand { get; private set; }
 
 
-        private McAlphaMotionMnp _mc;
+        private readonly IMotionExecutor _mc;
 
         private void OnValuesRefreshed(object sender, EventArgs e) {
-            CyclicState = _mc.CyclicState;
-            CyclicStateOn = CyclicState == CyclicStates.Running;
+            ConnectionState = _mc.ConnectionState;
+            CyclicStateOn = ConnectionState == ConnectionStates.Running;
 
             for (int i = 0; i < 16; i++) {
-                DigitalInputs[i].IsOn = _mc.DigitalInputs[i];
+                DigitalInputs[i].IsOn = _mc.GetDI(i, false);
             }
 
             for (int i = 0; i < 8; i++) {
-                Axes[i].CommandPos = _mc.Axes[i].CommandPos;
-                Axes[i].FeedbackPos = _mc.Axes[i].FeedbackPos;
-                Axes[i].Speed = _mc.Axes[i].Speed;
+                Axes[i].CommandPos = _mc.GetCommandPos(i);
+                Axes[i].FeedbackPos = _mc.GetActualPos(i);
+                Axes[i].Speed = _mc.GetRuntimeVelocity(i);
             }
 
             // Prepare data for transposing view
